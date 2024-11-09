@@ -1,11 +1,17 @@
 from pybricks.hubs import PrimeHub
 from pybricks.parameters import Axis
 from pybricks.pupdevices import Motor,ColorSensor,UltrasonicSensor
-from pybricks.parameters import Port,Direction
+from pybricks.parameters import Port,Direction,Color
 from pybricks.robotics import DriveBase
 from pybricks.tools import wait
 from fire_fighter import goal_found
 from wander import wander, wall_follow
+
+Color.GREEN = Color(h=132, s=94, v=26)
+Color.BLUE = Color(h=240, s=94, v=50)
+Color.RED = Color(h=0, s=94, v=40)
+
+colors = (Color.GREEN)
 
 def main():
     #initialize hub and reset IMU
