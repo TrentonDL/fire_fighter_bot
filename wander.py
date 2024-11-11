@@ -20,7 +20,6 @@ def wander(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_
 
 def wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
     #follow a wall on the robots left side
-    DESIRED_DISTANCE = 100  # Desired distance from the wall in mm
     min_distance = 80          # Minimum distance threshold from the wall
     max_distance = 120           # Maximum distance threshold from the wall
     speed_rate = 100             # Forward speed_rate in mm/s
