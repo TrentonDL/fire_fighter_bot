@@ -46,6 +46,9 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
         
         if s_ultra.distance() < 220:
             alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor)
+        elif f_ultra.distance() < 220:
+            drive_base.turn(angle=90, wait=True)
+            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor)
 
 def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
     global GOAL
@@ -54,7 +57,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
     #follow a wall on the robots left side
     drive_base.drive(speed=SPEED_RATE, turn_rate=0)
     next_to_wall = True
-    dist_increment = int(100) #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
+    dist_increment = 100 #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
     
     #drive forward the dist_increment, if goal is found then end, if wall no longer there then wander
     #else get new distance to wall and try to calculate the angle to straighten along
