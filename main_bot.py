@@ -1,7 +1,7 @@
 # run using ---->     pybricksdev run ble --name  "Team5"  main_bot.py
 
 from pybricks.hubs import PrimeHub
-from pybricks.parameters import Axis
+from pybricks.parameters import Axis,Button
 from pybricks.pupdevices import Motor,ColorSensor,UltrasonicSensor
 from pybricks.parameters import Port,Direction,Color
 from pybricks.robotics import DriveBase
@@ -14,14 +14,18 @@ DEBUG = 1
 GOAL = False
 MIN_DIST = 30          # Minimum distance threshold from the wall
 MAX_DIST = 80           # Maximum distance threshold from the wall
-SPEED_RATE = 100             # Forward SPEED_RATE in mm/s
+SPEED_RATE = 50             # Forward SPEED_RATE in mm/s
 TURN_RATE = 15          # Turn rate for small adjustments
 
-Color.GREEN = Color(h=120, s=100, v=100)
-Color.BLUE = Color(h=240, s=94, v=50)
-Color.RED = Color(h=0, s=94, v=40)
+# Color.GREEN = Color(h=120, s=100, v=100)
+# Color.BLUE = Color(h=240, s=94, v=50)
+# Color.RED = Color(h=0, s=94, v=40)
 
-colors = (Color.GREEN, Color.BLUE, Color.RED)
+# colors = (Color.GREEN, Color.BLUE, Color.RED)
+
+def E_STOP_Activated(hub:PrimeHub):
+    return Button.CENTER in hub.buttons.pressed()
+
 
 def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
     global GOAL
@@ -38,41 +42,13 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
             GOAL = True
             goal_found(drive_base, fan_motor)
         
-        drive_base.turn(angle=randint(10,90)) #rand turn dist from 10 - 90 degrees to the right
+        drive_base.turn(angle = (-1 * randint(10,90))) #rand turn dist from 10 - 90 degrees to the right
         
         if s_ultra.distance() < 220: #hi there
             alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor) #a comment
         elif f_ultra.distance() < 220: #if wall close in front, then turn left
             drive_base.turn(angle=90, wait=True) #fake comment
             alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor) #fake comment
-
-def wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
-    global GOAL
-    
-    # Start moving forward
-    drive_base.drive(drive_base,SPEED_RATE, 0) 
-    while not GOAL:
-        # Measure distance to the wall on the left side
-        s_dist = s_ultra.distance()
-        f_dist = f_ultra.distance()
-
-        # Check proximity to the wall and adjust direction
-        if s_dist < MIN_DIST:
-            # Too close to the wall, turn slightly right
-            drive_base.drive(SPEED_RATE, TURN_RATE)
-        elif s_dist > MAX_DIST:
-            # Too far from the wall, turn slightly left
-            drive_base.drive(SPEED_RATE, -TURN_RATE)
-        elif f_dist < MIN_DIST:
-            drive_base.drive(SPEED_RATE, TURN_RATE*5)
-        else:
-            # At the desired distance, go straight
-            drive_base.drive(SPEED_RATE, 0)
-
-        # Check for fire color detection to trigger GOAL behavior
-        if c_sensor.color(surface=True) == Color.GREEN:
-            goal_found(drive_base, fan_motor)
-            break
 
 def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
     global GOAL
@@ -102,9 +78,15 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
             else:
                 #adjust angle to try to drive parallel to the wall
                 dist_difference = new_wall_dist - left_wall_dist
-                adjust_angle_rad = umath.atan2(dist_difference,float(250)) #debated on acos here?
+                adjust_angle_rad = umath.acos(dist_difference,dist_increment) #debated on acos here?
                 adjust_angle_deg = umath.degrees(adjust_angle_rad)
-                drive_base.turn(angle=adjust_angle_deg)
+
+                if left_wall_dist > new_wall_dist:
+                    drive_base.turn(angle=adjust_angle_deg) # turn right
+                elif left_wall_dist < new_wall_dist:
+                    drive_base.turn(angle=-adjust_angle_deg) # turn left
+                else:
+                    drive_base.turn(angle=adjust_angle_deg) # will go straight since angle is 0
         
     if GOAL:
         goal_found(drive_base,fan_motor)
@@ -161,13 +143,14 @@ def main():
         #Define All Motors and sensors
         
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
+        #drive_base.settings(straight_speed=50, straight_acceleration=10 ,turn_rate=15 ,turn_acceleration=5)
         drive_base.use_gyro(True)
         #wander(drive_base, color_sensor, side_ultra_sonic, front_ultra_sonic, fan_motor)
         alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
-    except KeyboardInterrupt:
-        print("EMERGENCY STOP")
-        E_STOP(l_Motor, r_Motor, fan_motor, hub)
     finally:
+        if E_STOP_Activated(hub):
+            print("EMERGENCY STOP")
+            E_STOP(l_Motor, r_Motor, fan_motor, hub)
         clean_Motors(l_Motor,r_Motor,fan_motor,color_sensor,side_ultra_sonic,front_ultra_sonic)
 
 main()
