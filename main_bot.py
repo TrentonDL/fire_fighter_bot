@@ -32,6 +32,7 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
             drive_base.straight(rand_forw_dist)
             
         if check_goal(c_sensor):
+            GOAL = True
             goal_found(fan_motor)
         
         drive_base.turn(randint(10,90)) #rand turn dist from 10 - 90 degrees to the right
@@ -76,13 +77,14 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
     while not GOAL and next_to_wall:
         front_wall_dist = f_ultra.distance()
         #if the wall is too close we need to turn right
-        if front_wall_dist <= dist_increment:
-            drive_base.turn(90)            
+        if front_wall_dist < dist_increment:
+            drive_base.turn(angle=90, wait=True)            
         else:    
             left_wall_dist = s_ultra.distance()
             drive_base.straight(distance=dist_increment,wait=True)
             new_wall_dist = s_ultra.distance()
             if check_goal(c_sensor):
+                GOAL = True
                 break
             if new_wall_dist > 100: #wall no longer found
                 next_to_wall = False
