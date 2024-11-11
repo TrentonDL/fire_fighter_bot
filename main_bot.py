@@ -24,23 +24,28 @@ Color.RED = Color(h=0, s=94, v=40)
 colors = (Color.GREEN, Color.BLUE, Color.RED)
 
 def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
+    global GOAL
+    if DEBUG:
+        print("wander")
     #wander until find wall
     while not GOAL:
         f_distance = f_ultra.distance()
-        rand_forw_dist = randint(100,10000)
+        rand_forw_dist = randint(100,305)
         if rand_forw_dist < f_distance: #if the random distance is less than the wall in front; can subtract distance to make it stop sooner
-            drive_base.straight(rand_forw_dist)
+            drive_base.straight(distance=rand_forw_dist)
             
         if check_goal(c_sensor):
             GOAL = True
-            goal_found(fan_motor)
+            goal_found(drive_base, fan_motor)
         
-        drive_base.turn(randint(10,90)) #rand turn dist from 10 - 90 degrees to the right
+        drive_base.turn(angle=randint(10,90)) #rand turn dist from 10 - 90 degrees to the right
         
         if s_ultra.distance() < 220:
-            wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor)
+            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor)
 
 def wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
+    global GOAL
+    
     # Start moving forward
     drive_base.drive(drive_base,SPEED_RATE, 0) 
     while not GOAL:
@@ -63,18 +68,21 @@ def wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
 
         # Check for fire color detection to trigger GOAL behavior
         if c_sensor.color(surface=True) == Color.GREEN:
-            goal_found(fan_motor)
+            goal_found(drive_base, fan_motor)
             break
 
 def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
+    global GOAL
+    if DEBUG:
+        print("wall follow")
     #follow a wall on the robots left side
-    drive_base.drive(SPEED_RATE,0)
+    drive_base.drive(speed=SPEED_RATE, turn_rate=0)
     next_to_wall = True
     dist_increment = int(100) #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
     
     #drive forward the dist_increment, if goal is found then end, if wall no longer there then wander
     #else get new distance to wall and try to calculate the angle to straighten along
-    while not GOAL and next_to_wall:
+    while (not GOAL) and next_to_wall:
         front_wall_dist = f_ultra.distance()
         #if the wall is too close we need to turn right
         if front_wall_dist < dist_increment:
@@ -86,14 +94,14 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
             if check_goal(c_sensor):
                 GOAL = True
                 break
-            if new_wall_dist > 100: #wall no longer found
+            if new_wall_dist > 200: #wall no longer found
                 next_to_wall = False
             else:
                 #adjust angle to try to drive parallel to the wall
                 dist_difference = new_wall_dist - left_wall_dist
-                adjust_angle = umath.atan2(dist_difference,float(250)) #debated on acos here?
-                adjust_angle = umath.degrees(adjust_angle)
-                drive_base.turn(adjust_angle)
+                adjust_angle_rad = umath.atan2(dist_difference,float(250)) #debated on acos here?
+                adjust_angle_deg = umath.degrees(adjust_angle_rad)
+                drive_base.turn(angle=adjust_angle_deg)
         
     if GOAL:
         goal_found(drive_base,fan_motor)
@@ -101,19 +109,20 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
         wander_area(drive_base, c_sensor, s_ultra, f_ultra, fan_motor)
 
 def goal_found(d_base = DriveBase,fan_motor=Motor):
-    d_base.stop
+    d_base.stop()
     fan_motor.run(10000)
     wait(5000)
     fan_motor.run(0)
 
 
 def check_goal(c_sensor):
+    global GOAL
+
     color = c_sensor.color(surface=True)
 
     if DEBUG:
         print(color)
     if color == Color.GREEN:
-            global GOAL
             GOAL = True
     return GOAL
 
@@ -124,6 +133,12 @@ def clean_Motors(lMotor=Motor,rMotor=Motor,fMotor=Motor,cSenor=ColorSensor,sUltr
     cSenor.lights.off()
     sUltra.lights.off()
     fUltra.lights.off()
+
+def E_STOP(lMotor=Motor,rMotor=Motor,fanMotor=Motor, hub=PrimeHub):
+    lMotor.stop()
+    rMotor.stop()
+    fanMotor.stop()
+    hub.system.shutdown()
 
 def main():
     l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE,reset_angle=True)
@@ -145,11 +160,11 @@ def main():
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
         drive_base.use_gyro(True)
         #wander(drive_base, color_sensor, side_ultra_sonic, front_ultra_sonic, fan_motor)
-        #alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
-        
+        alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
+    except KeyboardInterrupt:
+        print("EMERGENCY STOP")
+        E_STOP(l_Motor, r_Motor, fan_motor, hub)
     finally:
         clean_Motors(l_Motor,r_Motor,fan_motor,color_sensor,side_ultra_sonic,front_ultra_sonic)
-        
-
 
 main()
