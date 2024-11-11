@@ -9,8 +9,9 @@ from pybricks.tools import wait
 from urandom import randint
 import umath
 
+DEBUG = 1
+
 GOAL = False
-#follow a wall on the robots left side
 MIN_DIST = 30          # Minimum distance threshold from the wall
 MAX_DIST = 80           # Maximum distance threshold from the wall
 SPEED_RATE = 100             # Forward SPEED_RATE in mm/s
@@ -100,11 +101,16 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
 def goal_found(d_base = DriveBase,fan_motor=Motor):
     d_base.stop
     fan_motor.run(10000)
-    wait(10000)
+    wait(5000)
+    fan_motor.run(0)
 
 
 def check_goal(c_sensor):
-    if c_sensor.color(surface=True) == Color.GREEN:
+    color = c_sensor.color(surface=True)
+
+    if DEBUG:
+        print(color)
+    if color == Color.GREEN:
             global GOAL
             GOAL = True
     return GOAL
@@ -118,7 +124,6 @@ def clean_Motors(lMotor=Motor,rMotor=Motor,fMotor=Motor,cSenor=ColorSensor,sUltr
     fUltra.lights.off()
 
 def main():
-
     l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE,reset_angle=True)
     r_Motor = Motor(Port.B, Direction.CLOCKWISE, reset_angle=True)
     fan_motor = Motor(Port.C, Direction.CLOCKWISE, reset_angle=True)
@@ -130,15 +135,16 @@ def main():
         #initialize hub and reset IMU
         hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
         hub.imu.reset_heading(0)
+        
+        #hub.speaker.play_notes(["G4/4"])
 
         #Define All Motors and sensors
         
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
         drive_base.use_gyro(True)
-
-        #goal_found(fan_motor)
         #wander(drive_base, color_sensor, side_ultra_sonic, front_ultra_sonic, fan_motor)
-        alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
+        #alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
+        
     finally:
         clean_Motors(l_Motor,r_Motor,fan_motor,color_sensor,side_ultra_sonic,front_ultra_sonic)
         
