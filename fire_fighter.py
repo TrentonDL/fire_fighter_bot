@@ -6,6 +6,6 @@ from pybricks.tools import wait
 
 
 def goal_found(fan_motor=Motor):
-    fan_motor.run(5000)
+    fan_motor.run(10000)
     wait(10000)
     
