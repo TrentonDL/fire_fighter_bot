@@ -12,11 +12,6 @@ import umath
 DEBUG = 1
 
 GOAL = False
-MIN_DIST = 30          # Minimum distance threshold from the wall
-MAX_DIST = 80           # Maximum distance threshold from the wall
-SPEED_RATE = 50             # Forward SPEED_RATE in mm/s
-TURN_RATE = 15          # Turn rate for small adjustments
-
 # Color.GREEN = Color(h=120, s=100, v=100)
 # Color.BLUE = Color(h=240, s=94, v=50)
 # Color.RED = Color(h=0, s=94, v=40)
@@ -55,7 +50,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
     if DEBUG:
         print("wall follow")
     #follow a wall on the robots left side
-    drive_base.drive(speed=SPEED_RATE, turn_rate=0)
+    drive_base.drive(speed=25, turn_rate=0)
     next_to_wall = True
     dist_increment = 100 #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
     
@@ -78,7 +73,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
             else:
                 #adjust angle to try to drive parallel to the wall
                 dist_difference = new_wall_dist - left_wall_dist
-                adjust_angle_rad = umath.acos(dist_difference,dist_increment) #debated on acos here?
+                adjust_angle_rad = umath.acos(dist_difference / dist_increment) #debated on acos here?
                 adjust_angle_deg = umath.degrees(adjust_angle_rad)
 
                 if left_wall_dist > new_wall_dist:
@@ -143,7 +138,7 @@ def main():
         #Define All Motors and sensors
         
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
-        #drive_base.settings(straight_speed=50, straight_acceleration=10 ,turn_rate=15 ,turn_acceleration=5)
+        drive_base.settings(straight_speed=70 ,turn_rate=15 )
         drive_base.use_gyro(True)
         #wander(drive_base, color_sensor, side_ultra_sonic, front_ultra_sonic, fan_motor)
         alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
