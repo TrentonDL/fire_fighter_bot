@@ -40,11 +40,11 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
         
         drive_base.turn(angle=randint(10,90)) #rand turn dist from 10 - 90 degrees to the right
         
-        if s_ultra.distance() < 220:
-            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor)
-        elif f_ultra.distance() < 220:
-            drive_base.turn(angle=90, wait=True)
-            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor)
+        if s_ultra.distance() < 220: #hi there
+            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor) #a comment
+        elif f_ultra.distance() < 220: #if wall close in front, then turn left
+            drive_base.turn(angle=90, wait=True) #fake comment
+            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor) #fake comment
 
 def wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
     global GOAL
