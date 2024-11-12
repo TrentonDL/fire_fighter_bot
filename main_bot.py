@@ -12,17 +12,11 @@ import umath
 DEBUG = 1
 
 GOAL = False
-# Color.GREEN = Color(h=120, s=100, v=100)
-# Color.BLUE = Color(h=240, s=94, v=50)
-# Color.RED = Color(h=0, s=94, v=40)
-
-# colors = (Color.GREEN, Color.BLUE, Color.RED)
 
 def E_STOP_Activated(hub:PrimeHub):
     return Button.CENTER in hub.buttons.pressed()
 
-
-def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
+def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor, hub = PrimeHub):
     global GOAL
     if DEBUG:
         print("wander")
@@ -35,7 +29,7 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
             
         if check_goal(c_sensor):
             GOAL = True
-            goal_found(drive_base, fan_motor)
+            goal_found(drive_base, fan_motor, hub)
         
         drive_base.turn(angle = (-1 * randint(10,90))) #rand turn dist from 10 - 90 degrees to the right
         
@@ -43,9 +37,9 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
             alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor) #a comment
         elif f_ultra.distance() < 220: #if wall close in front, then turn left
             drive_base.turn(angle=90, wait=True) #fake comment
-            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor) #fake comment
+            alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor, hub) #fake comment
 
-def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor):
+def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSensor,f_ultra=UltrasonicSensor, fan_motor=Motor, hub=PrimeHub):
     global GOAL
     if DEBUG:
         print("wall follow")
@@ -84,16 +78,17 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
                     drive_base.turn(angle=adjust_angle_deg) # will go straight since angle is 0
         
     if GOAL:
-        goal_found(drive_base,fan_motor)
+        goal_found(drive_base,fan_motor, hub)
     else:
-        wander_area(drive_base, c_sensor, s_ultra, f_ultra, fan_motor)
+        wander_area(drive_base, c_sensor, s_ultra, f_ultra, fan_motor, hub)
 
-def goal_found(d_base = DriveBase,fan_motor=Motor):
+def goal_found(d_base = DriveBase, fan_motor = Motor, hub = PrimeHub):
     d_base.stop()
+    # goal Found Siren -> He's a Pirate
+    hub.speaker.play_notes(["A3/6","A3/6","A3/6","B3/8","A3/8","R/8","G3/6","G3/6","G3/6","G3/8","A3/8","R/8","A3/6","A3/6","A3/6","B3/8","A3/8","R/8","A3/8","G3/8","E3/8","D3/8"],tempo=120)
     fan_motor.run(10000)
     wait(5000)
     fan_motor.run(0)
-
 
 def check_goal(c_sensor):
     global GOAL
@@ -121,6 +116,7 @@ def E_STOP(lMotor=Motor,rMotor=Motor,fanMotor=Motor, hub=PrimeHub):
     hub.system.shutdown()
 
 def main():
+    #Define All Motors and sensors
     l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE,reset_angle=True)
     r_Motor = Motor(Port.B, Direction.CLOCKWISE, reset_angle=True)
     fan_motor = Motor(Port.C, Direction.CLOCKWISE, reset_angle=True)
@@ -133,15 +129,15 @@ def main():
         hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
         hub.imu.reset_heading(0)
         
-        #hub.speaker.play_notes(["G4/4"])
+        #starting Siren -> Hoist the Colors
+        hub.speaker.play_notes(["F3/2","B4/2","F3/2","B4/4","B4/4","B4/2","R/8","F3/2","F3/2","A3/2","G3/2","F3/2","G3/1","R/8","G3/2","C3/2","G3/2","G3/2","C3/8","C3/1","R/8","F3/2","G3/2","C3/2","D3/2","E3/1"],tempo=120)
 
-        #Define All Motors and sensors
-        
+        #initilize Drive Base
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
         drive_base.settings(straight_speed=70 ,turn_rate=15 )
         drive_base.use_gyro(True)
-        #wander(drive_base, color_sensor, side_ultra_sonic, front_ultra_sonic, fan_motor)
-        alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor)
+
+        alt_wall_follow(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor, hub)
     finally:
         if E_STOP_Activated(hub):
             print("EMERGENCY STOP")
