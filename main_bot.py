@@ -48,9 +48,9 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
     if DEBUG:
         print("wall follow")
     #follow a wall on the robots left side
-    drive_base.drive(speed=50, turn_rate=0)
+    drive_base.drive(speed=570, turn_rate=0)
     next_to_wall = True
-    dist_increment = 100 #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
+    dist_increment = 200 #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
     
     #drive forward the dist_increment, if goal is found then end, if wall no longer there then wander
     #else get new distance to wall and try to calculate the angle to straighten along
@@ -59,7 +59,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
         if DEBUG:
             print(f"front wall = {front_wall_dist}\n")
         #if the wall is too close we need to turn right
-        if front_wall_dist < dist_increment:
+        if front_wall_dist < dist_increment :
             drive_base.turn(angle=90, wait=True)            
         else:    
             left_wall_dist = s_ultra.distance()
@@ -82,14 +82,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
                     adjust_angle_rad = umath.atan2(dist_difference, dist_increment) #debated on acos here?
                     adjust_angle_deg = umath.degrees(adjust_angle_rad)
                     drive_base.turn(angle=adjust_angle_deg)
-
-                    # if left_wall_dist > new_wall_dist:
-                    #     drive_base.turn(angle=adjust_angle_deg) # turn right
-                    # elif left_wall_dist < new_wall_dist:
-                    #     drive_base.turn(angle=-adjust_angle_deg) # turn left
-                    # else:
-                    #     drive_base.turn(angle=adjust_angle_deg) # will go straight since angle is 0
-        
+    
     if GOAL:
         goal_found(drive_base,fan_motor, hub)
     else:
@@ -143,7 +136,7 @@ def main():
         hub.imu.reset_heading(0)
         
         #starting Siren -> Hoist the Colors
-        #hub.speaker.play_notes(["F3/2","B4/2","F3/2","B4/4","B4/4","B4/2","R/8","F3/2","F3/2","A3/2","G3/2","F3/2","G3/1","R/8","G3/2","C3/2","G3/2","G3/2","C3/8","C3/1","R/8","F3/2","G3/2","C3/2","D3/2","E3/1"],tempo=120)
+        hub.speaker.play_notes(["F3/2","B4/2","F3/2","B4/4","B4/4","B4/2","R/8","F3/2","F3/2","A3/2","G3/2","F3/2","G3/1","R/8","G3/2","C3/2","G3/2","G3/2","C3/8","C3/1","R/8","F3/2","G3/2","C3/2","D3/2","E3/1"],tempo=120)
 
         #initilize Drive Base
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
