@@ -23,10 +23,6 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
     #wander until find wall
     s_dist = s_ultra.distance()
 
-    if check_goal(c_sensor):
-        GOAL = True
-        goal_found(drive_base, fan_motor, hub)
-    
     if s_dist < 220:
         alt_wall_follow(drive_base,c_sensor,s_ultra,f_ultra, fan_motor, hub)
     elif f_ultra.distance() < 220: #if wall close in front, then turn left
@@ -47,10 +43,6 @@ def wander_area(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=UltrasonicSens
         
         drive_base.turn(angle = (randint(-45,45))) #rand turn dist from 10 - 45 degrees to the right
         
-        if check_goal(c_sensor):
-            GOAL = True
-            goal_found(drive_base, fan_motor, hub)
-        
         s_dist = s_ultra.distance()
 
         if s_dist < 220:
@@ -67,8 +59,6 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
     drive_base.drive(speed=570, turn_rate=0)
     next_to_wall = True
     dist_increment = 100 #how far the robot will go every cycle to look for a wall in front or adjust to straighten along the wall to the left
-    int_wall_dist = 80 #the dist we want the robot to follow the wall
-    pd = False
     
     #drive forward the dist_increment, if goal is found then end, if wall no longer there then wander
     #else get new distance to wall and try to calculate the angle to straighten along
@@ -77,19 +67,13 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
         if DEBUG:
             print(f"front wall = {front_wall_dist}\n")
         #if the wall is too close we need to turn right
-        if front_wall_dist < (dist_increment + 20):
-            drive_base.turn(angle=90, wait=True)
-            if check_goal(c_sensor):
-                GOAL = True
-                break            
+        if front_wall_dist < (dist_increment + 20) :
+            drive_base.turn(angle=90, wait=True)            
         else:    
             left_wall_dist = s_ultra.distance()
             if DEBUG:
                 print(f"left wall = {left_wall_dist}\n")
             drive_base.straight(distance=dist_increment,wait=True)
-            if check_goal(c_sensor):
-                GOAL = True
-                break
             new_wall_dist = s_ultra.distance()
             if (new_wall_dist < 42 and front_wall_dist > 1999):
                 drive_base.straight(distance=-dist_increment, wait=True)
@@ -101,29 +85,13 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
                 if new_wall_dist > 200: #wall no longer found
                     next_to_wall = False
                     drive_base.curve(radius=(next_to_wall+110),angle=-120,wait=True)
-                    if check_goal(c_sensor):
-                        GOAL = True
-                        break
                     break
                 else:
                     #adjust angle to try to drive parallel to the wall
                     dist_difference = new_wall_dist - left_wall_dist
-                    d2 = new_wall_dist - int_wall_dist
-                    x2 = umath.sqrt(dist_increment * dist_increment - d2 * d2)
-                    int_adjust_angle = umath.atan2(x2, d2)
-                    int_adjust_angle = umath.degrees(int_adjust_angle)
                     adjust_angle_rad = umath.atan2(dist_difference, dist_increment) #debated on acos here?
                     adjust_angle_deg = umath.degrees(adjust_angle_rad)
-                    
-                    if (not pd):
-                        drive_base.turn(angle=-adjust_angle_deg)
-                        pd = True
-                    else:
-                        drive_base.turn(angle=-int_adjust_angle)
-                    
-                    if check_goal(c_sensor):
-                        GOAL = True
-                        break
+                    drive_base.turn(angle=-adjust_angle_deg)
     
     if GOAL:
         goal_found(drive_base,fan_motor, hub)
