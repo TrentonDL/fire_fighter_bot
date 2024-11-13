@@ -67,7 +67,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
         if DEBUG:
             print(f"front wall = {front_wall_dist}\n")
         #if the wall is too close we need to turn right
-        if front_wall_dist < (dist_increment -20) :
+        if front_wall_dist < (dist_increment + 20) :
             drive_base.turn(angle=90, wait=True)            
         else:    
             left_wall_dist = s_ultra.distance()
@@ -84,7 +84,7 @@ def alt_wall_follow(drive_base=DriveBase,c_sensor=ColorSensor,s_ultra=Ultrasonic
                     break
                 if new_wall_dist > 200: #wall no longer found
                     next_to_wall = False
-                    drive_base.curve(radius=(next_to_wall+110),angle=-90,wait=True)
+                    drive_base.curve(radius=(next_to_wall+110),angle=-120,wait=True)
                     break
                 else:
                     #adjust angle to try to drive parallel to the wall
@@ -152,7 +152,7 @@ def main():
         drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=55.5, axle_track=127)
         drive_base.settings(straight_speed=120 ,turn_rate=25 )
         drive_base.use_gyro(True)
-
+        fan_motor.track_target(20)
         wander_area(drive_base,color_sensor,side_ultra_sonic,front_ultra_sonic,fan_motor, hub)
     finally:
         if E_STOP_Activated(hub):
